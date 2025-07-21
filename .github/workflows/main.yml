@@ -42,8 +42,8 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           script: |
             cd /Users/renaxu/Project/go_project/douyin_project
-            git pull origin main
+            git pull origin main || echo "拉取代码失败，检查仓库权限"
             go mod tidy
-            docker compose down
-            docker build -t your-app:latest .
-            docker compose -p douyin_project2 down  
+            docker compose -p douyin_project2 down
+            docker build -t douyin-project-app:latest .
+            docker compose -p douyin_project2 up -d
