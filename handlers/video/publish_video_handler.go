@@ -28,6 +28,7 @@ var (
 // PublishVideoHandler 发布视频，并截取一帧画面作为封面
 func PublishVideoHandler(c *gin.Context) {
 	//准备参数
+	// todo:下面获取参数的代码需要修改
 	userId := c.GetInt64("user_id")
 	title := c.PostForm("title")
 	form, err := c.MultipartForm()

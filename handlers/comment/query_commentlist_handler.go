@@ -7,6 +7,7 @@ import (
 )
 
 func QueryCommentListHandler(c *gin.Context) {
+	// todo:下面获取参数的代码需要修改
 	userId := c.GetInt64("user_id")
 	videoId := c.GetInt64("video_id")
 

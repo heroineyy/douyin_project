@@ -19,7 +19,7 @@ import (
 // @Failure 500 {object} common.ErrorResponse "获取用户信息失败"
 // @Router /user [get]
 func UserInfoHandler(c *gin.Context) {
-	// 获取user_id todo：实际上只要传token就行，这里可以优化
+	// todo：实际上只要传token就行，这里可以优化
 	userId := c.GetInt64("user_id")
 	// 查询用户信息
 	var userInfo models.UserInfo

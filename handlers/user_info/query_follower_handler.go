@@ -8,6 +8,7 @@ import (
 )
 
 func QueryFollowerHandler(c *gin.Context) {
+	// todo:下面获取参数的代码需要修改
 	userId := c.GetInt64("user_id")
 	list, err := user_info.QueryFollowerList(userId)
 	if err != nil {
