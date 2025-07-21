@@ -1,97 +1,47 @@
 package comment
 
 import (
-	"byte_douyin_project/models"
+	"byte_douyin_project/common"
 	"byte_douyin_project/service/comment"
-	"errors"
-	"fmt"
 	"github.com/gin-gonic/gin"
-	"net/http"
-	"strconv"
 )
 
-type PostCommentResponse struct {
-	models.CommonResponse
-	*comment.Response
-}
+// @Summary 发布评论或者删除评论
+// @Description 根据用户ID和视频ID发布评论或者删除评论
+// @Tags 评论
+// @Accept  json
+// @Produce  json
+// @Param user_id body int64 true "用户ID"
+// @Param video_id body int64 true "视频ID"
+// @Param action_type body int64 true "操作类型(CREATE/DELETE)"
+// @Param comment_text body string false "评论内容(仅创建时使用)"
+// @Param comment_id body int64 false "评论ID(仅删除时使用)"
+// @Success 200 {object} CommentResponse "评论成功发布"
+// @Failure 400 {object} ErrorResponse "请求参数错误"
+// @Router /comment/action/ [post]
 
 func PostCommentHandler(c *gin.Context) {
-	NewProxyPostCommentHandler(c).Do()
-}
 
-type ProxyPostCommentHandler struct {
-	*gin.Context
+	userId := c.GetInt64("user_id")
+	videoId := c.GetInt64("video_id")
+	actionType := c.GetInt64("action_type")
+	var commentText string
+	var commentId int64
 
-	videoId     int64
-	userId      int64
-	commentId   int64
-	actionType  int64
-	commentText string
-}
-
-func NewProxyPostCommentHandler(context *gin.Context) *ProxyPostCommentHandler {
-	return &ProxyPostCommentHandler{Context: context}
-}
-
-func (p *ProxyPostCommentHandler) Do() {
-	//解析参数
-	if err := p.parseNum(); err != nil {
-		p.SendError(err.Error())
-		return
-	}
-
-	//正式调用Service层
-	commentRes, err := comment.PostComment(p.userId, p.videoId, p.commentId, p.actionType, p.commentText)
-	if err != nil {
-		p.SendError(err.Error())
-		return
-	}
-
-	//成功返回
-	p.SendOk(commentRes)
-}
-
-func (p *ProxyPostCommentHandler) parseNum() error {
-	rawUserId, _ := p.Get("user_id")
-	userId, ok := rawUserId.(int64)
-	if !ok {
-		return errors.New("userId解析出错")
-	}
-	p.userId = userId
-
-	rawVideoId := p.Query("video_id")
-	videoId, err := strconv.ParseInt(rawVideoId, 10, 64)
-	if err != nil {
-		return err
-	}
-	p.videoId = videoId
-
-	//根据actionType解析对应的可选参数
-	rawActionType := p.Query("action_type")
-	actionType, err := strconv.ParseInt(rawActionType, 10, 64)
 	switch actionType {
 	case comment.CREATE:
-		p.commentText = p.Query("comment_text")
+		commentText = c.Query("comment_text")
 	case comment.DELETE:
-		p.commentId, err = strconv.ParseInt(p.Query("comment_id"), 10, 64)
-		if err != nil {
-			return err
-		}
+		commentId = c.GetInt64("comment_id")
 	default:
-		return fmt.Errorf("未定义的行为%d", actionType)
+		common.ErrorResponse(c, "actionType解析出错")
+		return
 	}
-	p.actionType = actionType
-	return nil
-}
 
-func (p *ProxyPostCommentHandler) SendError(msg string) {
-	p.JSON(http.StatusOK, PostCommentResponse{
-		CommonResponse: models.CommonResponse{StatusCode: 1, StatusMsg: msg}, Response: &comment.Response{}})
-}
-
-func (p *ProxyPostCommentHandler) SendOk(comment *comment.Response) {
-	p.JSON(http.StatusOK, PostCommentResponse{
-		CommonResponse: models.CommonResponse{StatusCode: 0},
-		Response:       comment,
-	})
+	commentRes, err := comment.PostComment(userId, videoId, commentId, actionType, commentText)
+	if err != nil {
+		common.ErrorResponse(c, err.Error())
+		return
+	}
+	common.SuccessResponse(c, commentRes)
 }

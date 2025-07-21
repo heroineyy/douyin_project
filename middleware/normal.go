@@ -15,7 +15,7 @@ func NoAuthToGetUserId() gin.HandlerFunc {
 		}
 		//用户不存在
 		if rawId == "" {
-			c.JSON(http.StatusOK, models.CommonResponse{StatusCode: 401, StatusMsg: "用户不存在"})
+			c.JSON(http.StatusOK, models.CommonResponse{StatusCode: 401, StatusMsg: "用户不为空"})
 			c.Abort() //阻止执行
 			return
 		}

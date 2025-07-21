@@ -17,58 +17,33 @@ var (
 )
 
 func PostFollowAction(userId, userToId int64, actionType int) error {
-	return NewPostFollowActionFlow(userId, userToId, actionType).Do()
-}
-
-type PostFollowActionFlow struct {
-	userId     int64
-	userToId   int64
-	actionType int
-}
-
-func NewPostFollowActionFlow(userId int64, userToId int64, actionType int) *PostFollowActionFlow {
-	return &PostFollowActionFlow{userId: userId, userToId: userToId, actionType: actionType}
-}
-
-func (p *PostFollowActionFlow) Do() error {
-	var err error
-	if err = p.checkNum(); err != nil {
-		return err
-	}
-	if err = p.publish(); err != nil {
-		return err
-	}
-	return nil
-}
-
-func (p *PostFollowActionFlow) checkNum() error {
 	//由于userId是经过乐token鉴权故不需要check，只需要检查userToId
-	if !models.NewUserInfoDAO().IsUserExistById(p.userToId) {
+	if !models.NewUserInfoDAO().IsUserExistById(userToId) {
 		return ErrIvdFolUsr
 	}
-	if p.actionType != FOLLOW && p.actionType != CANCEL {
+	if actionType != FOLLOW && actionType != CANCEL {
 		return ErrIvdAct
 	}
 	//自己不能关注自己
-	if p.userId == p.userToId {
+	if userId == userToId {
 		return ErrIvdAct
 	}
-	return nil
-}
-
-func (p *PostFollowActionFlow) publish() error {
 	userDAO := models.NewUserInfoDAO()
-	var err error
-	switch p.actionType {
+
+	switch actionType {
 	case FOLLOW:
-		err = userDAO.AddUserFollow(p.userId, p.userToId)
+		if err := userDAO.AddUserFollow(userId, userToId); err != nil {
+			return err
+		}
 		//更新redis的关注信息
-		cache.NewProxyIndexMap().UpdateUserRelation(p.userId, p.userToId, true)
+		cache.NewProxyIndexMap().UpdateUserRelation(userId, userToId, true)
 	case CANCEL:
-		err = userDAO.CancelUserFollow(p.userId, p.userToId)
-		cache.NewProxyIndexMap().UpdateUserRelation(p.userId, p.userToId, false)
+		if err := userDAO.CancelUserFollow(userId, userToId); err != nil {
+			return err
+		}
+		cache.NewProxyIndexMap().UpdateUserRelation(userId, userToId, false)
 	default:
 		return ErrIvdAct
 	}
-	return err
+	return nil
 }

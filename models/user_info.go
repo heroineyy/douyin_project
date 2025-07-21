@@ -2,6 +2,7 @@ package models
 
 import (
 	"errors"
+	"fmt"
 	"gorm.io/gorm"
 	"log"
 	"sync"
@@ -41,15 +42,21 @@ func NewUserInfoDAO() *UserInfoDAO {
 }
 
 func (u *UserInfoDAO) QueryUserInfoById(userId int64, userinfo *UserInfo) error {
-	if userinfo == nil {
-		return ErrIvdPtr
-	}
 	//DB.Where("id=?",userId).First(userinfo)
-	DB.Where("id=?", userId).Select([]string{"id", "name", "follow_count", "follower_count", "is_follow"}).First(userinfo)
-	//id为零值，说明sql执行失败
-	if userinfo.Id == 0 {
-		return errors.New("该用户不存在")
+	result := DB.Where("id=?", userId).
+		Select([]string{"id", "name", "follow_count", "follower_count", "is_follow"}).
+		First(userinfo)
+
+	if result.Error != nil {
+		if errors.Is(result.Error, gorm.ErrRecordNotFound) {
+			fmt.Println("查询的用户不存在")
+		} else {
+			fmt.Printf("查询出错: %v\n", result.Error)
+		}
+	} else {
+		fmt.Printf("查询成功，用户姓名: %s\n", userinfo.Name)
 	}
+
 	return nil
 }
 

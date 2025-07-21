@@ -43,10 +43,9 @@ type Config struct {
 
 var Info Config
 
-//包初始化加载时候会调用的函数
+// 包初始化加载时候会调用的函数
 func init() {
-
-	if _, err := toml.DecodeFile("D:\\GoProject\\douyin\\byte_douyin_project\\config\\config.toml", &Info); err != nil {
+	if _, err := toml.DecodeFile("./config/dev_config.toml", &Info); err != nil {
 		panic(err)
 	}
 	//去除左右的空格

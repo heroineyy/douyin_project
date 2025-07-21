@@ -1,10 +1,10 @@
 #关系型数据库配置
 [mysql]
-host = "db"  #docker-compose.yml中mysql的名称
+host = "127.0.0.1"
 port = 3306
 database = "douyin"
 username = "root"
-password = "douyin123"
+password = ""
 charset = "utf8mb4"
 parse_time = true
 loc = "Local"
@@ -12,7 +12,7 @@ loc = "Local"
 
 #nosql配置，用于存储每个用户是否对某个视频点赞，以及关注了某个人（主要用于反馈前端情况，比如点了赞后会变成红心
 [redis]
-host = "redis" #docker-compose.yml中redis的名称
+host = "127.0.0.1"
 port = 6379
 database = 0
 
@@ -23,8 +23,7 @@ port = 8080
 
 #用于保存资源的路径，以及用于截图工具的路径（截图工具放在lib目录
 [path]
-ffmpeg_path = "/app/lib/ffmpeg"
-static_source_path = "/app/static"
-
+ffmpeg_path = "/opt/homebrew/bin/ffmpeg"
+static_source_path = "/Users/renaxu/Project/go_project/douyin_project/static"
 
 

@@ -1,65 +1,33 @@
 package user_info
 
 import (
+	"byte_douyin_project/common"
 	"byte_douyin_project/models"
-	"errors"
 	"github.com/gin-gonic/gin"
-	"net/http"
 )
 
-type UserResponse struct {
-	models.CommonResponse
-	User *models.UserInfo `json:"user"`
-}
-
+// 获取用户信息
+// @Summary 获取用户信息
+// @Description 根据用户ID获取用户详细信息
+// @Tags 用户相关
+// @Accept json
+// @Produce json
+// @Param user_id query int64 true "用户ID"
+// @Param token query string true "用户token"
+// @Success 200 {object} common.SuccessResponse "成功获取用户信息"
+// @Failure 400 {object} common.ErrorResponse "用户ID不存在或格式错误"
+// @Failure 500 {object} common.ErrorResponse "获取用户信息失败"
+// @Router /user [get]
 func UserInfoHandler(c *gin.Context) {
-	p := NewProxyUserInfo(c)
-	//得到上层中间件根据token解析的userId
-	rawId, ok := c.Get("user_id")
-	if !ok {
-		p.UserInfoError("解析userId出错")
+	// 获取user_id todo：实际上只要传token就行，这里可以优化
+	userId := c.GetInt64("user_id")
+	// 查询用户信息
+	var userInfo models.UserInfo
+
+	if err := models.NewUserInfoDAO().QueryUserInfoById(userId, &userInfo); err != nil {
+		common.ErrorResponse(c, "获取用户信息失败: "+err.Error())
 		return
 	}
-	err := p.DoQueryUserInfoByUserId(rawId)
-	if err != nil {
-		p.UserInfoError(err.Error())
-	}
-}
 
-type ProxyUserInfo struct {
-	c *gin.Context
-}
-
-func NewProxyUserInfo(c *gin.Context) *ProxyUserInfo {
-	return &ProxyUserInfo{c: c}
-}
-
-func (p *ProxyUserInfo) DoQueryUserInfoByUserId(rawId interface{}) error {
-	userId, ok := rawId.(int64)
-	if !ok {
-		return errors.New("解析userId失败")
-	}
-	//由于得到userinfo不需要组装model层的数据，所以直接调用model层的接口
-	userinfoDAO := models.NewUserInfoDAO()
-
-	var userInfo models.UserInfo
-	err := userinfoDAO.QueryUserInfoById(userId, &userInfo)
-	if err != nil {
-		return err
-	}
-	p.UserInfoOk(&userInfo)
-	return nil
-}
-
-func (p *ProxyUserInfo) UserInfoError(msg string) {
-	p.c.JSON(http.StatusOK, UserResponse{
-		CommonResponse: models.CommonResponse{StatusCode: 1, StatusMsg: msg},
-	})
-}
-
-func (p *ProxyUserInfo) UserInfoOk(user *models.UserInfo) {
-	p.c.JSON(http.StatusOK, UserResponse{
-		CommonResponse: models.CommonResponse{StatusCode: 0},
-		User:           user,
-	})
+	common.SuccessResponse(c, &userInfo)
 }
